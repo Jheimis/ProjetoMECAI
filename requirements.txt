@@ -2,3 +2,5 @@ pandas
 numpy
 matplotlib
 jinja2
+ipykernel
+gurobipy
