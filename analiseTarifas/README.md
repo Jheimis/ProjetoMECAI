@@ -5,20 +5,21 @@ Projeto de análise das tarifas homologadas de energia elétrica disponibilizada
 ## Conteúdo
 
 - [Notebook da análise](analise_horossazonal_aneel.ipynb)
-- [Dados da ANEEL](tarifas-homologadas-distribuidoras-energia-eletrica.csv)
-- [Dicionário de dados](Dicionario/)
-- [Gráficos gerados](images/)
+- [Dados da ANEEL](../dados/tarifas-homologadas-distribuidoras-energia-eletrica.csv)
+- [Dicionário de dados](dicionario/)
+- [Gráficos gerados](../images/)
 
 ## Configuração e execução
 
-O projeto usa Python e as bibliotecas listadas em [`requirements.txt`](requirements.txt).
+O projeto usa Python e as bibliotecas listadas em [`requirements.txt`](../requirements.txt), na raiz do repositório. Execute os comandos a partir da raiz:
 
 ```powershell
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 ```
 
-Abra `analise_horossazonal_aneel.ipynb` no VS Code/Jupyter, selecione o interpretador da pasta `.venv` e execute as células em ordem. O arquivo CSV deve permanecer na raiz do projeto, pois o notebook o carrega por caminho relativo.
+Abra `analiseTarifas/analise_horossazonal_aneel.ipynb` no VS Code/Jupyter, selecione o interpretador da pasta `.venv` e execute as células em ordem. O notebook procura o CSV em `dados/` na raiz do projeto ou em uma pasta ancestral do diretório de trabalho.
 
 ## Dados e preparação
 
@@ -42,29 +43,29 @@ As comparações agrupam os dados por distribuidora, modalidade e subgrupo. Para
 
 **Quantidade de registros por posto tarifário**
 
-![Registros por posto tarifário](images/postos.png)
+![Registros por posto tarifário](../images/postos.png)
 
 **TE mediana por modalidade e posto horário**
 
-![TE mediana por modalidade](images/te_modalidade.png)
+![TE mediana por modalidade](../images/te_modalidade.png)
 
 **Maiores diferenciais de TE entre Ponta e Fora ponta**
 
-![Diferenciais de TE](images/te_diferencial_top15.png)
+![Diferenciais de TE](../images/te_diferencial_top15.png)
 
 **TE por posto sazonal**
 
-![TE por posto sazonal](images/te_sazonal.png)
+![TE por posto sazonal](../images/te_sazonal.png)
 
 **Evolução do diferencial de TE**
 
-![Evolução na modalidade Azul](images/evol_azul.png)
+![Evolução na modalidade Azul](../images/evol_azul.png)
 
-![Evolução na modalidade Verde](images/evol_verde.png)
+![Evolução na modalidade Verde](../images/evol_verde.png)
 
 **Maiores diferenciais medianos nas tarifas vigentes**
 
-![Ranking de tarifas vigentes](images/ranking_vigente.png)
+![Ranking de tarifas vigentes](../images/ranking_vigente.png)
 
 ## Parte 2 — custo horossazonal em São Paulo
 
@@ -91,9 +92,9 @@ Faixas indicadas no notebook para tarifas vigentes em **06/10/2026**, de concess
 
 Na modalidade Azul, a ponta fica cerca de **1,35 a 1,42 vez** o valor fora ponta na parcela de energia. Na Verde, essa razão fica entre **3,1 e 5,6 vezes**, pois a tarifa de ponta em R$/MWh incorpora uma parcela associada à demanda de ponta. A TUSD de demanda em R$/kW é apresentada separadamente e não equivale, por si só, a um custo por kWh.
 
-![Comparação das tarifas vigentes de São Paulo para A4](images/tarifa_sp_a4_comparacao.png)
+![Comparação das tarifas vigentes de São Paulo para A4](../images/tarifa_sp_a4_comparacao.png)
 
-![Composição de TE e TUSD nas tarifas A4](images/composicao_tarifas_sp_a4.png)
+![Composição de TE e TUSD nas tarifas A4](../images/composicao_tarifas_sp_a4.png)
 
 ### Simulação de custo efetivo
 
@@ -101,7 +102,7 @@ Para comparar Azul e Verde, o notebook estima o custo de energia ponderado pelo 
 
 Com essas premissas, a conclusão registrada no notebook é de custos efetivos próximos entre as modalidades, com diferença estimada de **R$ 0,005 a R$ 0,010/kWh** a favor da Azul. Na sensibilidade para CPFL Paulista, a Verde fica mais barata a 5% de consumo na ponta; em torno de 10% ou acima, a Azul tende a compensar. A escolha depende do perfil efetivo de carga e das condições contratuais.
 
-![Simulação do custo efetivo em A4](images/custo_efetivo_simulado_sp_a4.png)
+![Simulação do custo efetivo em A4](../images/custo_efetivo_simulado_sp_a4.png)
 
 ### Histórico e sazonalidade em São Paulo
 
@@ -109,7 +110,7 @@ A série histórica de tarifas em R$/kWh para A4 começa em 2015, pois até abri
 
 Os registros sazonais identificados para São Paulo abrangem **03/02/2010 a 14/04/2014**. O notebook calcula a comparação seco/úmido para as distribuidoras e subgrupos que possuem esses registros.
 
-![Evolução das tarifas horossazonais em São Paulo](images/evolucao_tarifas_sp_a4.png)
+![Evolução das tarifas horossazonais em São Paulo](../images/evolucao_tarifas_sp_a4.png)
 
 Ao executar a célula de exportação do notebook, a tabela consolidada é gravada como `dados/tarifa_horossazonal_sp_vigente_kwh.csv`, ao lado do CSV de origem, com separador `;` e decimal `,`. O arquivo de resultados tem nome próprio e não sobrescreve os dados originais da ANEEL.
 
@@ -125,4 +126,4 @@ Ao executar a célula de exportação do notebook, a tabela consolidada é grava
 ## Referências
 
 - [ANEEL — Tarifas homologadas das distribuidoras de energia elétrica](https://dadosabertos.aneel.gov.br/dataset/tarifas-distribuidoras-energia-eletrica)
-- Dicionário de dados fornecido junto ao projeto, na pasta [`Dicionario`](Dicionario/).
+- Dicionário de dados fornecido junto ao projeto, na pasta [`dicionario`](dicionario/).

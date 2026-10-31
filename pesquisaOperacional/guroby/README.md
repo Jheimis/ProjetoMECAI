@@ -4,7 +4,9 @@ Este diretório contém [`ETA_agendamento_bombas_tarifa_aneel_sp.ipynb`](ETA_age
 
 ## Como executar
 
-Execute as células do notebook na ordem:
+Na raiz do repositório, prepare o ambiente conforme o [guia principal](../../README.md). O arquivo `requirements.txt` instala as dependências Python do notebook; para resolver o modelo, também é necessária uma licença Gurobi válida, configurada para a instalação local.
+
+Abra `pesquisaOperacional/guroby/ETA_agendamento_bombas_tarifa_aneel_sp.ipynb` no VS Code com a extensão Jupyter, selecione o interpretador da `.venv` e execute as células na ordem:
 
 1. **Tarifas ANEEL:** localiza o CSV, carrega e converte datas e valores.
 2. **Modelo de otimização:** define os dados operacionais, constrói o problema e define a tarifa por hora.
@@ -12,7 +14,7 @@ Execute as células do notebook na ordem:
 4. **Gráficos e resultados:** visualiza o agendamento e os níveis dos reservatórios.
 5. **Cenários tarifários:** compara o custo para tarifas reais das distribuidoras paulistas e para um cenário hipotético de referência.
 
-O CSV esperado é `dados/tarifas-homologadas-distribuidoras-energia-eletrica.csv`, na pasta `dados` da raiz do projeto. O notebook procura essa pasta na pasta de trabalho atual e em suas pastas ancestrais, portanto pode ser aberto a partir da raiz ou de `pesquisaOperacional`.
+O CSV esperado é `dados/tarifas-homologadas-distribuidoras-energia-eletrica.csv`, na pasta `dados` da raiz do projeto. O notebook procura essa pasta na pasta de trabalho atual e em suas pastas ancestrais.
 
 Dependências Python:
 
@@ -21,13 +23,13 @@ Dependências Python:
 - `matplotlib`
 - `gurobipy` — requer instalação e licença Gurobi válidas. O notebook foi executado com uma licença restrita para uso não comercial.
 
-Com o ambiente virtual do projeto ativo, instale as dependências de análise já listadas no arquivo principal:
+Com o ambiente virtual do projeto ativo e o terminal na raiz do repositório, instale as dependências listadas no arquivo principal:
 
 ```powershell
-python -m pip install -r ..\requirements.txt
+python -m pip install -r requirements.txt
 ```
 
-Instale `gurobipy` conforme a licença e o método de instalação disponibilizados pela Gurobi para o seu ambiente. A licença restrita usada na execução registrada tinha limite temporal e pode não estar mais válida.
+O `requirements.txt` inclui `gurobipy`, mas a instalação do pacote não fornece uma licença de solver. Configure uma licença válida conforme as instruções da Gurobi. A licença restrita usada na execução registrada tinha limite temporal e pode não estar mais válida.
 
 ## Tarifas utilizadas
 

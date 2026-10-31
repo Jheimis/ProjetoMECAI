@@ -1,24 +1,55 @@
-# Projeto MECAI — Tarifas ANEEL e operação de ETA
+# Projeto MECAI — tarifas de energia e operação de ETA
 
-Projeto de análise das tarifas horossazonais da ANEEL e otimização do agendamento de bombas de uma estação de tratamento de água (ETA).
+O projeto reúne duas frentes de trabalho relacionadas às tarifas horossazonais da ANEEL:
 
-## Conteúdo
+1. **Análise tarifária:** exploração da base nacional de tarifas homologadas e estudo aplicado às distribuidoras paulistas, incluindo comparação entre postos horários e estimativa de custos em R$/kWh.
+2. **Pesquisa operacional:** formulação de um modelo MILP para programar o bombeamento de uma estação de tratamento de água (ETA), atendendo à demanda de água com menor custo de energia.
 
-- [`analiseTarifas/`](analiseTarifas/): notebook de análise nacional e estudo das tarifas de São Paulo em R$/kWh.
-- [`pesquisaOperacional/`](pesquisaOperacional/): modelo MILP de bombeamento em 24 horas, com comparação de custos por tarifa e distribuidora.
-- [`dados/`](dados/): base CSV de tarifas da ANEEL usada pelos notebooks.
-- [`images/`](images/): gráficos das análises.
+## Estrutura
 
-## Executar
+- [`analiseTarifas/`](analiseTarifas/): notebook de análise tarifária e seu guia de execução.
+- [`pesquisaOperacional/guroby/`](pesquisaOperacional/guroby/): notebook de otimização que usa o solver Gurobi.
+- [`pesquisaOperacional/pyomo_highs/`](pesquisaOperacional/pyomo_highs/): modelo em Python com Pyomo e HiGHS, interface gráfica e alternativa com python-mip/CBC.
+- [`dados/`](dados/): CSV de tarifas da ANEEL usado pelos notebooks e modelos.
+- [`images/`](images/): gráficos da análise e captura da interface da ETA.
+- [`requirements.txt`](requirements.txt): dependências base dos notebooks e da análise.
 
-Com Python instalado, crie/ative o ambiente virtual e instale as dependências:
+## Preparar o ambiente
+
+Os comandos abaixo devem ser executados no PowerShell, na raiz do repositório:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-Abra os notebooks no VS Code/Jupyter e execute as células em ordem. O modelo de otimização também requer `gurobipy` e uma licença válida do Gurobi.
+Se o PowerShell bloquear a ativação do ambiente, abra um terminal que permita ativar o ambiente ou execute os programas pelo caminho `.\.venv\Scripts\python.exe`.
 
-Consulte [`analiseTarifas/README.md`](analiseTarifas/README.md) e [`pesquisaOperacional/README.md`](pesquisaOperacional/README.md) para metodologia, resultados e limitações.
+## Executar a análise de tarifas
+
+Abra `analiseTarifas/analise_horossazonal_aneel.ipynb` no VS Code com a extensão Jupyter, escolha o interpretador `.venv` e execute as células em ordem. O notebook procura automaticamente a base `dados/tarifas-homologadas-distribuidoras-energia-eletrica.csv` na raiz ou em uma pasta ancestral. Uma das últimas etapas exporta a tabela de tarifas paulistas para `dados/tarifa_horossazonal_sp_vigente_kwh.csv`.
+
+## Executar o modelo de otimização da ETA
+
+Há duas implementações:
+
+- **Pyomo + HiGHS:** para abrir a interface gráfica ou executar o modelo pelo terminal, instale as dependências adicionais e siga o [guia Pyomo/HiGHS](pesquisaOperacional/README-pyomo-highs.md). O aplicativo pode ser iniciado da raiz com:
+
+  ```powershell
+  python -m pip install pyomo highspy
+  python pesquisaOperacional\pyomo_highs\eta_gui.py
+  ```
+
+- **Gurobi:** abra `pesquisaOperacional/guroby/ETA_agendamento_bombas_tarifa_aneel_sp.ipynb` no VS Code/Jupyter e execute as células em ordem. Consulte o [guia do notebook Gurobi](pesquisaOperacional/guroby/README.md). É necessária uma instalação/licença válida do Gurobi para resolver o modelo.
+
+O modelo usa parâmetros de exemplo para bombas, reservatórios, topologia e demanda horária. Os resultados são demonstrativos e precisam ser validados com dados operacionais antes de orientar decisões reais.
+
+## Guias e interpretação
+
+- [Análise de tarifas ANEEL](analiseTarifas/README.md): dados, metodologia, gráficos, resultados e limitações.
+- [Modelo Pyomo + HiGHS](pesquisaOperacional/README-pyomo-highs.md): instalação, interface, execução e premissas do modelo.
+- [Modelo Gurobi](pesquisaOperacional/guroby/README.md): execução do notebook, formulação e resultados registrados.
+
+As tarifas apresentadas nos estudos não incluem necessariamente tributos ou bandeiras. TUSD em R$/kW representa demanda e não deve ser somada diretamente a valores de energia em R$/MWh.
