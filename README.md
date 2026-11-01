@@ -35,13 +35,14 @@ Abra `analiseTarifas/analise_horossazonal_aneel.ipynb` no VS Code com a extensã
 
 Há duas implementações:
 
-- **Pyomo + HiGHS:** para abrir a interface gráfica ou executar o modelo pelo terminal, instale as dependências adicionais e siga o [guia Pyomo/HiGHS](pesquisaOperacional/README-pyomo-highs.md). O aplicativo pode ser iniciado da raiz com:
+- **Pyomo + HiGHS:** para abrir a interface gráfica ou executar o modelo pelo terminal, instale as dependências adicionais e siga o [guia Pyomo/HiGHS](pesquisaOperacional/pyomo_highs/README.md). O aplicativo pode ser iniciado da raiz com:
 
   ```powershell
-  python -m pip install pyomo highspy
+  python -m pip install pyomo highspy mip
   python pesquisaOperacional\pyomo_highs\eta_gui.py
   ```
 
+- **Comparação de solvers:** o notebook `pesquisaOperacional/pyomo_highs/ETA_agendamento_bombas_pyomo_highs.ipynb` inclui uma seção para comparar HiGHS, Gurobi e CBC no mesmo cenário. HiGHS e CBC podem ser usados com as dependências acima; Gurobi requer instalação e licença válidas.
 - **Gurobi:** abra `pesquisaOperacional/guroby/ETA_agendamento_bombas_tarifa_aneel_sp.ipynb` no VS Code/Jupyter e execute as células em ordem. Consulte o [guia do notebook Gurobi](pesquisaOperacional/guroby/README.md). É necessária uma instalação/licença válida do Gurobi para resolver o modelo.
 
 O modelo usa parâmetros de exemplo para bombas, reservatórios, topologia e demanda horária. Os resultados são demonstrativos e precisam ser validados com dados operacionais antes de orientar decisões reais.
@@ -49,7 +50,7 @@ O modelo usa parâmetros de exemplo para bombas, reservatórios, topologia e dem
 ## Guias e interpretação
 
 - [Análise de tarifas ANEEL](analiseTarifas/README.md): dados, metodologia, gráficos, resultados e limitações.
-- [Modelo Pyomo + HiGHS](pesquisaOperacional/README-pyomo-highs.md): instalação, interface, execução e premissas do modelo.
+- [Modelo Pyomo + HiGHS](pesquisaOperacional/pyomo_highs/README.md): instalação, interface, comparação de solvers, execução e premissas do modelo.
 - [Modelo Gurobi](pesquisaOperacional/guroby/README.md): execução do notebook, formulação e resultados registrados.
 
 As tarifas apresentadas nos estudos não incluem necessariamente tributos ou bandeiras. TUSD em R$/kW representa demanda e não deve ser somada diretamente a valores de energia em R$/MWh.

@@ -3,7 +3,8 @@ import time
 import pyomo.environ as pyo
 from eta_dados import *
 
-def construir(c_fora, c_ponta, dias=1, horas_ponta=HORAS_PONTA, fator_demanda=1.0):
+def construir(c_fora, c_ponta, dias=1, horas_ponta=HORAS_PONTA, fator_demanda=1.0,
+              tarifa_demanda=None):
     T = 24 * dias
     D = demanda(dias, fator_demanda)
     C = {t: (c_ponta if (t % 24) in horas_ponta else c_fora) for t in range(T)}
@@ -16,7 +17,37 @@ def construir(c_fora, c_ponta, dias=1, horas_ponta=HORAS_PONTA, fator_demanda=1.
     m.fpr = pyo.Var(m.APR, m.H, within=pyo.NonNegativeReals)
     m.frs = pyo.Var(m.ARS, m.H, within=pyo.NonNegativeReals)
     m.V = pyo.Var(m.R, m.H, within=pyo.NonNegativeReals)
-    m.obj = pyo.Objective(expr=sum(C[t] * PARAM_BOMBAS[p][0] * m.x[p, t] for p in m.P for t in m.H), sense=pyo.minimize)
+    m.kw_total = pyo.Expression(m.H, rule=lambda m, t: sum(PARAM_BOMBAS[p][0] * m.x[p, t] for p in m.P))
+    m.custo_energia = pyo.Expression(
+        expr=sum(C[t] * m.kw_total[t] for t in m.H)
+    )
+    custo_demanda_expr = 0
+    if tarifa_demanda is not None:
+        fator_periodo = dias / 30
+        if "unica" in tarifa_demanda:
+            m.kw_pico = pyo.Var(within=pyo.NonNegativeReals)
+            m.limite_pico = pyo.Constraint(m.H, rule=lambda m, t: m.kw_pico >= m.kw_total[t])
+            custo_demanda_expr = fator_periodo * tarifa_demanda["unica"] * m.kw_pico
+        elif {"ponta", "fora_ponta"} <= tarifa_demanda.keys():
+            horas_ponta = set(horas_ponta)
+            m.kw_pico_ponta = pyo.Var(within=pyo.NonNegativeReals)
+            m.kw_pico_fora = pyo.Var(within=pyo.NonNegativeReals)
+            m.limite_pico_ponta = pyo.Constraint(
+                m.H, rule=lambda m, t: m.kw_pico_ponta >= m.kw_total[t]
+                if t % 24 in horas_ponta else pyo.Constraint.Skip
+            )
+            m.limite_pico_fora = pyo.Constraint(
+                m.H, rule=lambda m, t: m.kw_pico_fora >= m.kw_total[t]
+                if t % 24 not in horas_ponta else pyo.Constraint.Skip
+            )
+            custo_demanda_expr = fator_periodo * (
+                tarifa_demanda["ponta"] * m.kw_pico_ponta
+                + tarifa_demanda["fora_ponta"] * m.kw_pico_fora
+            )
+        else:
+            raise ValueError("Tarifas de demanda inválidas: informe 'unica' ou 'ponta' e 'fora_ponta'.")
+    m.custo_demanda = pyo.Expression(expr=custo_demanda_expr)
+    m.obj = pyo.Objective(expr=m.custo_energia + m.custo_demanda, sense=pyo.minimize)
 
     m.qmin = pyo.Constraint(m.P, m.H, rule=lambda m, p, t: m.q[p, t] >= PARAM_BOMBAS[p][1] * m.x[p, t])
     m.qmax = pyo.Constraint(m.P, m.H, rule=lambda m, p, t: m.q[p, t] <= PARAM_BOMBAS[p][2] * m.x[p, t])
@@ -35,6 +66,29 @@ def construir(c_fora, c_ponta, dias=1, horas_ponta=HORAS_PONTA, fator_demanda=1.
             m.V[r, t].setlb(PARAM_RES[r][0]); m.V[r, t].setub(PARAM_RES[r][1])
     m.rec = pyo.Constraint(m.R, rule=lambda m, r: m.V[r, T - 1] >= PARAM_RES[r][2])
     return m
+
+
+def construir_referencia_demanda(dias=1, fator_demanda=1.0):
+    """Constrói referência que aproxima bombeamento da demanda, sem otimizar tarifas."""
+    m = construir(0, 0, dias=dias, fator_demanda=fator_demanda)
+    m.obj.deactivate()
+    D = demanda(dias, fator_demanda)
+    m.desvio_acima = pyo.Var(m.H, within=pyo.NonNegativeReals)
+    m.desvio_abaixo = pyo.Var(m.H, within=pyo.NonNegativeReals)
+    m.alvo_demanda = pyo.Constraint(
+        m.H,
+        rule=lambda m, t: sum(m.q[p, t] for p in m.P) - sum(D[s, t] for s in m.S)
+        == m.desvio_acima[t] - m.desvio_abaixo[t],
+    )
+    max_potencia = sum(PARAM_BOMBAS[p][0] for p in BOMBAS)
+    peso_desvio = max_potencia * 24 * dias + 1
+    m.obj_referencia = pyo.Objective(
+        expr=peso_desvio * sum(m.desvio_acima[t] + m.desvio_abaixo[t] for t in m.H)
+        + sum(m.kw_total[t] for t in m.H),
+        sense=pyo.minimize,
+    )
+    return m
+
 
 def demanda_maxima_viavel():
     """Maior demanda diária (m³/dia) que o modelo consegue atender, mantendo a forma da curva horária.
@@ -87,8 +141,11 @@ if __name__ == "__main__":
     csv = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] else achar_csv()
     dias = int(sys.argv[2]) if len(sys.argv) > 2 else 1
     fp, pt = tarifa_aneel(csv)
-    m = construir(fp, pt, dias=dias)
+    td = tarifa_demanda_kw(csv)
+    m = construir(fp, pt, dias=dias, tarifa_demanda=td)
     n_var = sum(1 for _ in m.component_data_objects(pyo.Var))
     print(f"{dias} dia(s): {n_var} variáveis | fora ponta R$ {fp:.4f}/kWh, ponta R$ {pt:.4f}/kWh")
-    dt, custo, gap, term = resolver(m)
-    print(f"HiGHS: custo R$ {custo:.2f} | gap {gap*100:.2f}% | {dt:.1f} s | {term}")
+    dt, objetivo, gap, term = resolver(m)
+    print(f"HiGHS: energia R$ {pyo.value(m.custo_energia):.2f} | demanda rateada "
+          f"R$ {pyo.value(m.custo_demanda):.2f} | total R$ {objetivo:.2f} | "
+          f"gap {gap*100:.2f}% | {dt:.1f} s | {term}")
